@@ -1,17 +1,6 @@
 
-class A:
-	"""docstring for A"""
-	def aa(self, msg):
-		print msg
+l = [1, 2, 3, 4, 
+	5, 6, 7, 8]
 
-class B(A):
-	def aa(self):
-		A.aa(self, 'hello')
-		print 'bb'
-
-a = A()
-#a.aa()
-b = B()
-#b.aa()	
-a = b
-a.aa()
+for ll in l:
+	print ll
