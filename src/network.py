@@ -28,7 +28,7 @@ class Client(asyncore.dispatcher):
 	def handle_read(self):
 		recv = self.recv(8192)
 		if self.callback is not None:
-			self.write(self.callback(recv))
+			self.write(self.callback(recv, self))
 		else:
 			self.write('{\'errmsg\':\'client no callback\'}')
 
@@ -36,8 +36,12 @@ class Client(asyncore.dispatcher):
 class Server(asyncore.dispatcher):
 	"""network server"""
 	callback = None
-	def __init__(self, callback, host, port):
+
+	acceptCallBack = None
+
+	def __init__(self, callback, acceptCallBack, host, port):
 		self.callback = callback
+		self.acceptCallBack = acceptCallBack
 		asyncore.dispatcher.__init__(self)
 		self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.set_reuse_addr()
@@ -50,4 +54,8 @@ class Server(asyncore.dispatcher):
 			sock, addr = pair
 			print 'Incoming connection from %s' % repr(addr)
 			client = Client(self.callback, sock)
+			if self.acceptCallBack is not None:
+				self.acceptCallBack(client)
+			else:
+				print 'no acceptCallBack'
 		

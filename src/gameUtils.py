@@ -12,6 +12,14 @@ def spliteCards(cards):
 			intCards.append(atoi(card))
 	return intCards.sort()
 
+def joinCards(cards):
+	#cards is int list cards
+	strCards = ''
+	cards = cards.sort()
+	for card in cards:
+		strCards = strCards + itoa(card)
+	return strCards
+
 def isCardValid(strCard):
 	#check single card
 	if len(strCard) != 1:

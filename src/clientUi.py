@@ -1,3 +1,4 @@
+import gameUtils
 
 class Player:
 
@@ -37,7 +38,13 @@ class Ui:
 
 	playerList = []
 
+	cards = []
+
 	def __init__(self):
+		self.clear()
+
+	def clear(self):
+		self.playerList = []
 		self.wait()
 		self.waitLog()
 
@@ -93,6 +100,9 @@ class Ui:
 			if player.name == name:
 				player.setContent(content)
 
+	def setCards(self, cards):
+		self.cards = cards
+
 	def output(self):
 		print ''
 		print '---------------------------------150 Gaming---------------------------------'
@@ -102,7 +112,13 @@ class Ui:
 		for player in self.playerList:
 			formatStr = formatStr + player.playerStatus + player.name + player.playerContent + '\t'
 		print formatStr
+		print '---------------------------------your cards---------------------------------'
+		strCards = ''
+		for card in self.cards:
+			strCards = strCards + gameUtils.itoa(card) + ' '
+		print strCards
 		print '----------------------------------------------------------------------------'
+		print ''
 
 	def rawoutput(self, content):
 		print content

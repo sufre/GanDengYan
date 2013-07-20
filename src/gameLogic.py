@@ -8,12 +8,14 @@ class Player:
 
 	isTurn = False
 
+	owns = []
+
+	post = []
+
 	def __init__(self, name):
 		self.name = name
 
 class Game:
-
-	playerId = 0
 
 	isStart = False
 
@@ -28,7 +30,6 @@ class Game:
 			if player.name == name:
 				return False
 		self.players.append(Player(name))
-		self.playerId = self.playerId + 1
 		return True
 
 	def delPlayer(self, name):
@@ -45,9 +46,6 @@ class Game:
 			if player.name == name:
 				return player
 		return None
-
-	def getId(self):
-		return self.playerId
 
 	def initCards(self):
 		self.leftCards = []

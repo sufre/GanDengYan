@@ -1,6 +1,9 @@
+import cmd
 
-l = [1, 2, 3, 4, 
-	5, 6, 7, 8]
+class A(cmd.Cmd):
+	def do_hello(self, line):
+		print line
 
-for ll in l:
-	print ll
+a = A()
+
+a.cmdloop()

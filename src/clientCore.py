@@ -1,20 +1,31 @@
+import cmd
 import network
 import message
 
-class Player:
+import clientUi
 
-	name = ''
 
-	def __init__(self, name):
-		self.name = name
-
-class ClientCore:
+class ClientCore(cmd.Cmd):
 	"""client logic core"""
 	sockClient = None
 
-	def __init__(self, host, port):
-		sockClient = network.Client(self.process, None, host, port)
+	ui = None
 
-	def process(self, msg):
-		response = ''
-		return response
+	def __init__(self, host, port):
+		self.sockClient = network.Client(self.process, None, host, port)
+		self.ui = clientUi.Ui()
+
+	def process(self, msg, client):
+		recvMsg = message.loads(msg)
+		if recvMsg.toEnd == 'client':
+			return recvMsg.process(self.ui).toResultString()
+		else:
+			responseMsg = recvMsg.result(self.ui)
+			if responseMsg is not None:
+				return responseMsg.toParamString()
+			return ''
+
+	def do_login(self, line):
+		params = {}
+		params['name'] = line
+		self.sockClient.write(message.LoginMsg().make(params).toString())

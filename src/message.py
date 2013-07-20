@@ -3,6 +3,7 @@ import time
 
 import clientUi
 import gameLogic
+import gameUtils
 
 class Msg:
 	"""interface for Msg"""
@@ -10,8 +11,8 @@ class Msg:
 	toEnd = ''
 
 	msgId = 0
-	msgFrom = 0
-	msgTo = 0
+	msgFrom = ''
+	msgTo = ''
 	msgMethod = {}
 	msgParams = {}
 	msgResults = {}
@@ -38,10 +39,10 @@ class Msg:
 	def make(self, params):
 		pass
 
-	def process(self, game):
+	def process(self, params):
 		pass
 
-	def result(self, ui):
+	def result(self, params):
 		pass
 
 	#toStrings
@@ -77,13 +78,15 @@ class Msg:
 		
 
 		
-class loginMsg(Msg):
+class LoginMsg(Msg):
 	"""login"""
 	username = ''
 
 	def __init__(self, msg=None):
 		self.fromEnd = 'client'
 		self.toEnd = 'server'
+
+		self.initErrCodes()
 
 		if msg is not None:
 			self.msgId = msg.msgId
@@ -102,27 +105,92 @@ class loginMsg(Msg):
 		self.msgId = int(time.time())
 		self.msgMethod = 'login'
 
-		self.msgFrom = params['clientid']
-		self.msgTo = 0
+		self.msgFrom = ''
+		self.msgTo = 'server'
 		
 		self.msgParams['name'] = params['name']
 		return self
 
-	def process(self, game):
+	def process(self, params):
 		#game for serverEnd logic
-		if game.addPlayer(self.msgParams['name']):
+		server = params
+		if server.addPlayer(self.msgParams['name']):
 			self.setErrCode(0)
-			self.msgResults['id'] = game.getId()
 		else:
 			self.setErrCode(1)
 		return self
 
-	def result(self, ui):
+	def result(self, params):
 		#ui for clientEnd user interface
+		ui = params
 		if self.msgResults['errCode'] == 0:
 			ui.rawoutput('login success!')
 		else:
 			ui.rawoutput('login fail, server may not exsit, please contact z00214951.')
+		return None
+
+class GameStatusMsg(Msg):
+	def __init__(self, msg=None):
+		self.fromEnd = 'server'
+		self.toEnd = 'client'
+
+		self.initErrCodes()
+
+		if msg is not None:
+			self.msgId = msg.msgId
+			self.msgFrom = msg.msgFrom
+			self.msgTo = msg.msgTo
+			self.msgMethod = msg.msgMethod
+			self.msgParams = msg.msgParams
+			self.msgResults = msg.msgResults
+
+	def initErrCodes(self):
+		self.errCodes.append((1, 'Unkown message'))
+
+	def make(self, params):
+		#for fromEnd
+		self.msgId = int(time.time())
+		self.msgMethod = 'gameStatus'
+
+		self.msgFrom = 'server'
+		self.msgTo = params['to']
+		
+		self.msgParams['status'] = params['status']
+		if 'lefts' in params:
+			self.msgParams['lefts'] = params['lefts']
+		self.msgParams['players'] = params['players']
+		return self
+
+	def process(self, params):
+		#game for serverEnd logic
+		ui = params
+		ui.clear()
+
+		for player in self.msgParams['players']:
+			ui.addPlayer(player)
+
+		if self.msgParams['status'] == 'gaming':
+			if 'lefts' in self.msgParams:
+				ui.gamingLog(self.msgParams['lefts'])
+			for player in self.msgParams['players']:
+				if 'isTurn' in self.msgParams['players'][player]:
+					if self.msgParams['players'][player]['isTurn'] == 'true':
+						ui.changeTurn(player)
+				if player == self.msgTo:
+					ui.setCards(self.msgParams['players'][player]['cards'])
+				ui.changePlayerContent(player, gameUtils.joinCards(self.msgParams['players'][player]['posts']))
+		else:
+			for player in self.msgParams['players']:
+				if 'isReady' in self.msgParams['players'][player]:
+					if self.msgParams['players'][player]['isReady'] == 'true':
+						ui.getPlayer(player).ready()
+		ui.output()
+		self.setErrCode(0)
+		return self
+
+	def result(self, params):
+		#ui for clientEnd user interface
+		pass
 
 def loads(strMsg):
 	msg = Msg()
@@ -137,16 +205,16 @@ def loads(strMsg):
 		msg.msgResults = jsonMsg['results']
 
 	if msg.msgMethod == 'login':
-		return loginMsg(msg)
+		return LoginMsg(msg)
 
 def test(msgType):
 	if msgType == 'login':
 		params = {}
 		params['clientid'] = 1
 		params['name'] = 'sufre'
-		loginmsg = loginMsg().make(params)
-		print 'make test: ' + loginmsg.toString()
-		msg = loads(loginmsg.toString())
+		Loginmsg = LoginMsg().make(params)
+		print 'make test: ' + Loginmsg.toString()
+		msg = loads(Loginmsg.toString())
 		print 'msg loads: ' + msg.toString()
 
 test('login')
