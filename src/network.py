@@ -27,6 +27,7 @@ class Client(asyncore.dispatcher):
 
 	def handle_read(self):
 		recv = self.recv(8192)
+		print 'recv msg: ' + recv
 		if self.callback is not None:
 			self.write(self.callback(recv, self))
 		else:

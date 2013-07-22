@@ -217,4 +217,4 @@ def test(msgType):
 		msg = loads(Loginmsg.toString())
 		print 'msg loads: ' + msg.toString()
 
-test('login')
+#test('login')

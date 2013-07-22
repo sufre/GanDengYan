@@ -1,4 +1,6 @@
 import cmd
+import threading
+
 import network
 import message
 
@@ -12,8 +14,13 @@ class ClientCore(cmd.Cmd):
 	ui = None
 
 	def __init__(self, host, port):
+		cmd.Cmd.__init__(self)
 		self.sockClient = network.Client(self.process, None, host, port)
 		self.ui = clientUi.Ui()
+
+	def start(self):
+		threading.Thread(target=network.asyncore.loop, kwargs={'timeout':0.1}).start()
+		cmd.Cmd.cmdloop(self)
 
 	def process(self, msg, client):
 		recvMsg = message.loads(msg)
@@ -29,3 +36,11 @@ class ClientCore(cmd.Cmd):
 		params = {}
 		params['name'] = line
 		self.sockClient.write(message.LoginMsg().make(params).toString())
+
+	def do_exit(self, line):
+		print 'going to exit...'
+		network.asyncore.close_all()
+		return True
+
+client = ClientCore('localhost', 33333)
+client.start()

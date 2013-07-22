@@ -1,10 +1,12 @@
+import cmd
+import threading
 import gameLogic
 import network
 import message
 
 
 
-class ServerCore:
+class ServerCore(cmd.Cmd):
 	server = None
 
 	game = None
@@ -13,14 +15,22 @@ class ServerCore:
 
 	clients = {}
 
-	self.currentClient = None
-
 	def __init__(self, host, port):
+		cmd.Cmd.__init__(self)
 		self.server = network.Server(self.process, self.accept, host, port)
 		self.game = gameLogic.Game()
 
+	def start(self):
+		threading.Thread(target=network.asyncore.loop, kwargs={'timeout':0.1}).start()
+		cmd.Cmd.cmdloop(self)
+
+	def do_exit(self, line):
+		print 'going to exit...'
+		network.asyncore.close_all()
+		return True
+
 	def accept(self, client):
-		unhandledClients.append(client)
+		self.unhandledClients.append(client)
 
 	def process(self, msg, client):
 		recvMsg = message.loads(msg)
@@ -41,6 +51,7 @@ class ServerCore:
 				self.game.delPlayer(name)
 				return False
 			self.clients[name] = client
+			self.unhandledClients.pop(pos)
 
 			#notify others someone login
 			params = {}
@@ -64,3 +75,6 @@ class ServerCore:
 
 			return True
 		return False
+
+server = ServerCore('localhost', 33333)
+server.start()
