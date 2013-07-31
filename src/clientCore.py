@@ -23,14 +23,16 @@ class ClientCore(cmd.Cmd):
 		cmd.Cmd.cmdloop(self)
 
 	def process(self, msg, client):
+		result = ''
 		recvMsg = message.loads(msg)
-		if recvMsg.toEnd == 'client':
-			return recvMsg.process(self.ui).toResultString()
-		else:
-			responseMsg = recvMsg.result(self.ui)
-			if responseMsg is not None:
-				return responseMsg.toParamString()
-			return ''
+		while recvMsg is not None:
+			if recvMsg.toEnd == 'client':
+				result = result + recvMsg.process(self.ui).toResultString()
+			else:
+				responseMsg = recvMsg.result(self.ui)
+				if responseMsg is not None:
+					result = result + responseMsg.toParamString()
+			recvMsg = message.loads('')
 
 	def do_login(self, line):
 		params = {}

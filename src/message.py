@@ -192,9 +192,40 @@ class GameStatusMsg(Msg):
 		#ui for clientEnd user interface
 		pass
 
+messagePool = ''
+
+def getMessageFromPool():
+	global messagePool
+	lCount = 0
+	rCount = 0
+	startIndex = 0
+	endIndex = 0
+	pos = 0
+	for c in messagePool:
+		if c == '{':
+			lCount = lCount + 1
+			if lCount == 1:
+				startIndex = pos
+		if c == '}':
+			rCount = rCount + 1
+			if lCount != 0 and lCount == rCount:
+				endIndex = pos
+				break
+		pos = pos + 1
+	retMsg = None
+	if lCount != 0 and lCount == rCount:
+		retMsg = messagePool[startIndex:endIndex+1]
+		messagePool = messagePool[:startIndex] + messagePool[endIndex+1:]
+	return retMsg
+
 def loads(strMsg):
+	global messagePool
+	messagePool = messagePool + strMsg
+	singleMsg = getMessageFromPool()
+	if singleMsg is None:
+		return None
 	msg = Msg()
-	jsonMsg = json.loads(strMsg)
+	jsonMsg = json.loads(singleMsg)
 	msg.msgId = jsonMsg['id']
 	msg.msgFrom = jsonMsg['from']
 	msg.msgTo = jsonMsg['to']
@@ -206,6 +237,9 @@ def loads(strMsg):
 
 	if msg.msgMethod == 'login':
 		return LoginMsg(msg)
+	if msg.msgMethod == 'gameStatus':
+		return GameStatusMsg(msg)
+	return None
 
 def test(msgType):
 	if msgType == 'login':

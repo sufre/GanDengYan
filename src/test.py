@@ -1,9 +1,14 @@
-import cmd
+import json
+import message
 
-class A(cmd.Cmd):
-	def do_hello(self, line):
-		print line
-
-a = A()
-
-a.cmdloop()
+string = '{"to": "sufre", "from": "server", "id": 1375284519, "params": {"status": "wait", "players": {"sufre": {"cards": [], "posts": []}}}, "method": "gameStatus"}'
+print string
+print ''
+message.messagePool = string
+msg = message.getMessageFromPool()
+print msg
+print ''
+print message.messagePool
+print ''
+params = json.loads(msg)
+print params

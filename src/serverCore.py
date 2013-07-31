@@ -15,6 +15,8 @@ class ServerCore(cmd.Cmd):
 
 	clients = {}
 
+	currentClient = None
+
 	def __init__(self, host, port):
 		cmd.Cmd.__init__(self)
 		self.server = network.Server(self.process, self.accept, host, port)
@@ -33,14 +35,19 @@ class ServerCore(cmd.Cmd):
 		self.unhandledClients.append(client)
 
 	def process(self, msg, client):
+		result = ''
+		self.currentClient = client
 		recvMsg = message.loads(msg)
-		if recvMsg.toEnd == 'server':
-			return recvMsg.process(self).toResultString()
-		else:
-			recvMsg.result(self)
-			return ''
+		while recvMsg is not None:
+			if recvMsg.toEnd == 'server':
+				result = result + recvMsg.process(self).toResultString()
+			else:
+				recvMsg.result(self)
+			recvMsg = message.loads('')
+		
 
-	def addPlayer(self, name, client):
+	def addPlayer(self, name):
+		client = self.currentClient
 		if self.game.addPlayer(name):
 			pos = 0
 			for unhandledClient in self.unhandledClients:
@@ -71,6 +78,7 @@ class ServerCore(cmd.Cmd):
 				params['players'][player.name]['cards'] = player.owns
 				params['players'][player.name]['posts'] = player.post
 			for cl in self.clients:
+				params['to'] = cl
 				self.clients[cl].write(message.GameStatusMsg().make(params).toParamString())
 
 			return True
